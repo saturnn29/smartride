@@ -1,0 +1,6 @@
+@SmartRide_HostAddress = http://localhost:5139
+
+GET {{SmartRide_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
