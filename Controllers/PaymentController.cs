@@ -1,75 +1,87 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SmartRide.Services;
 using SmartRide.Models;
-using SmartRide.Data;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 
 namespace SmartRide.Controllers
 {
-    [Route("api/payment-methods")]
     [ApiController]
-    public class PaymentMethodsController : ControllerBase
+    [Route("api/[controller]")]
+    public class PaymentController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly PaymentService _paymentService;
 
-        public PaymentMethodsController(AppDbContext context)
+        public PaymentController(PaymentService paymentService)
         {
-            _context = context;
+            _paymentService = paymentService;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AddPaymentMethod([FromBody] PaymentMethods paymentRequest)
+        // ✅ Get Saved Payment Methods for a Passenger
+        [HttpGet("GetPaymentMethods/{passenger_id}")]
+        public async Task<IActionResult> GetPaymentMethods(int passenger_id)
         {
-            if (paymentRequest == null)
+            var methods = await _paymentService.GetPaymentMethodsByPassenger(passenger_id);
+            if (methods == null || !methods.Any())
             {
-                return BadRequest("Invalid request data.");
+                return NotFound(new { success = false, message = "No saved payment methods found." });
             }
-
-            var validPaymentTypes = new[] { "CREDIT_CARD", "DEBIT_CARD", "PAYPAL", "CASH" };
-            if (!validPaymentTypes.Contains(paymentRequest.PaymentType))
-            {
-                return BadRequest("Invalid payment type.");
-            }
-
-            // Validate required fields based on payment type
-            if ((paymentRequest.PaymentType == "CREDIT_CARD" || paymentRequest.PaymentType == "DEBIT_CARD"))
-            {
-                if (paymentRequest is not CardPaymentRequest cardRequest)
-                {
-                    return BadRequest("Invalid card payment request.");
-                }
-
-                if (string.IsNullOrEmpty(cardRequest.CardNumber) ||
-                    string.IsNullOrEmpty(cardRequest.ExpiryDate) ||
-                    string.IsNullOrEmpty(cardRequest.CardHolderName))
-                {
-                    return BadRequest("Card details are required for credit/debit card payments.");
-                }
-            }
-
-            if (paymentRequest.PaymentType == "PAYPAL")
-            {
-                if (string.IsNullOrEmpty(paymentRequest.PayPalEmail))
-                {
-                    return BadRequest("PayPal email is required for PayPal payments.");
-                }
-            }
-
-            _context.PaymentMethods.Add(paymentRequest);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetPaymentMethod), new { id = paymentRequest.PaymentMethodId }, paymentRequest);
+            return Ok(methods);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetPaymentMethod(int id)
+        // ✅ Process Payment Using a Saved Payment Method
+        [HttpPost("ProcessPayment")]
+        public async Task<IActionResult> ProcessPayment([FromBody] ProcessPayment request)
         {
-            var paymentMethod = await _context.PaymentMethods.FindAsync(id);
-            if (paymentMethod == null)
+            if (request == null || request.Amount <= 0)
             {
-                return NotFound();
+                return BadRequest(new { success = false, message = "Invalid request" });
             }
-            return Ok(paymentMethod);
+
+            // Retrieve saved payment method if PaymentMethodId is provided
+            if (request.PaymentMethodId.HasValue)
+            {
+                var savedMethod = await _paymentService.GetPaymentMethodById(request.PassengerId, request.PaymentMethodId.Value);
+                if (savedMethod == null)
+                {
+                    return BadRequest(new { success = false, message = "Saved payment method not found." });
+                }
+
+                request.PaymentType = savedMethod.PaymentType; // Use saved method's type
+
+                if (savedMethod.PaymentType == "CREDIT_CARD" || savedMethod.PaymentType == "DEBIT_CARD")
+                {
+                    var cardRequest = new CardPaymentRequest
+                    {
+                        Amount = request.Amount,
+                        PassengerId = request.PassengerId,
+                        PaymentMethodId = request.PaymentMethodId,
+                        PaymentType = savedMethod.PaymentType,
+                        CardNumber = savedMethod.CardNumber,
+                        ExpiryDate = savedMethod.ExpiryDate,
+                        CardHolderName = savedMethod.CardHolderName
+                    };
+
+                    string result = await _paymentService.ProcessCardPayment(
+                        cardRequest.CardNumber,
+                        cardRequest.ExpiryDate,
+                        cardRequest.CardHolderName,
+                        cardRequest.Amount
+                    );
+                    return Ok(new { success = true, message = result });
+                }
+                else if (savedMethod.PaymentType == "PAYPAL")
+                {
+                    return Ok(new { success = true, message = $"PayPal payment processed for {savedMethod.PayPalEmail}" });
+                }
+                else if (savedMethod.PaymentType == "CASH")
+                {
+                    return Ok(new { success = true, message = "Cash payment pending. Collect payment on delivery." });
+                }
+
+                return BadRequest(new { success = false, message = "Unsupported saved payment type" });
+            }
+
+            return BadRequest(new { success = false, message = "Payment method ID is required" });
         }
     }
 }

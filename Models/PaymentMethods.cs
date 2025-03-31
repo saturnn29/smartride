@@ -5,11 +5,11 @@ namespace SmartRide.Models
     public class PaymentMethods
     {
         [Key]
-        public int PaymentMethodId { get; set; }  // Renamed from Id to match the controller
+        public int PaymentTypeId { get; set; }  
 
         [Required]
         public string PaymentType { get; set; }
-
+        public int PassengerId { get; set; }
         public string? CardNumber { get; set; }
         public string? ExpiryDate { get; set; }
         public string? CardHolderName { get; set; }
