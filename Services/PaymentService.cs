@@ -28,7 +28,7 @@ namespace SmartRide.Services
         public async Task<PaymentMethods> GetPaymentMethodById(int passengerId, int paymentMethodId)
         {
             return await _dbContext.PaymentMethods
-                                   .FirstOrDefaultAsync(pm => pm.PassengerId == passengerId && pm.PaymentTypeId == paymentMethodId);
+                                   .FirstOrDefaultAsync(pm => pm.PassengerId == passengerId && pm.PaymentMethodId == paymentMethodId);
         }
 
         // ✅ Process Credit/Debit Card Payment (Simulate Payment Gateway)

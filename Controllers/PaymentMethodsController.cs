@@ -48,7 +48,7 @@ namespace SmartRide.Controllers
             _context.PaymentMethods.Add(paymentRequest);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetPaymentMethod), new { id = paymentRequest.PaymentTypeId }, paymentRequest);
+            return CreatedAtAction(nameof(GetPaymentMethod), new { id = paymentRequest.PaymentMethodId }, paymentRequest);
         }
 
         [HttpGet("{id}")]

@@ -5,7 +5,7 @@ namespace SmartRide.Models
     public class PaymentMethods
     {
         [Key]
-        public int PaymentTypeId { get; set; }  
+        public int PaymentMethodId { get; set; }  
 
         [Required]
         public string PaymentType { get; set; }
