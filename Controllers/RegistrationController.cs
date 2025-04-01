@@ -80,15 +80,15 @@ namespace SmartRide.Controllers
                 }
 
                 // Insert into Drivers table
-                string insertQuery = "INSERT INTO Drivers (driver_id, license_number, vehicle_details, active_status) " +
-                                     "VALUES (@driver_id, @license_number, @vehicle_details, @active_status)";
+                string insertQuery = "INSERT INTO Drivers (driver_id, license_number, vehicle_details, isAvailable) " +
+                                     "VALUES (@driver_id, @license_number, @vehicle_details, @isAvailable)";
 
                 using (SqlCommand cmd = new SqlCommand(insertQuery, con))
                 {
                     cmd.Parameters.AddWithValue("@driver_id", driver.driver_id);
                     cmd.Parameters.AddWithValue("@license_number", driver.license_number);
                     cmd.Parameters.AddWithValue("@vehicle_details", driver.vehicle_details);
-                    cmd.Parameters.AddWithValue("@active_status", driver.active_status);
+                    cmd.Parameters.AddWithValue("@isAvailable", driver.isAvailable);
 
                     int rowsAffected = cmd.ExecuteNonQuery();
 

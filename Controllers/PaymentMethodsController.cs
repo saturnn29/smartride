@@ -26,8 +26,8 @@ namespace SmartRide.Controllers
                 return BadRequest("Invalid request data.");
             }
 
-            var validPaymentTypes = Enum.GetValues(typeof(PaymentType)).Cast<PaymentType>();
-            if (!validPaymentTypes.Contains(paymentRequest.PaymentType))
+            // Ensure the payment type is a valid enum value
+            if (!Enum.IsDefined(typeof(PaymentType), paymentRequest.PaymentType))
             {
                 return BadRequest("Invalid payment type.");
             }
@@ -39,17 +39,6 @@ namespace SmartRide.Controllers
                  string.IsNullOrEmpty(paymentRequest.CardHolderName)))
             {
                 return BadRequest("Card details are required for credit/debit card payments.");
-            }
-
-            if (paymentRequest.PaymentType == PaymentType.PAYPAL && string.IsNullOrEmpty(paymentRequest.PayPalEmail))
-            {
-                return BadRequest("PayPal email is required for PayPal payments.");
-            }
-
-            // Ensure fields that should be null based on payment type are null
-            if (paymentRequest.PaymentType != PaymentType.PAYPAL)
-            {
-                paymentRequest.PayPalEmail = null;
             }
 
             if (paymentRequest.PaymentType != PaymentType.CREDIT_CARD &&
@@ -66,26 +55,12 @@ namespace SmartRide.Controllers
             {
                 var duplicateCard = await _context.PaymentMethods
                     .Where(pm => pm.CardNumber == paymentRequest.CardNumber &&
-                           pm.PassengerId == paymentRequest.PassengerId)
+                                 pm.PassengerId == paymentRequest.PassengerId)
                     .FirstOrDefaultAsync();
 
                 if (duplicateCard != null)
                 {
                     return BadRequest("This card is already registered for this passenger.");
-                }
-            }
-
-            // Check for duplicate PayPal email
-            if (paymentRequest.PaymentType == PaymentType.PAYPAL)
-            {
-                var duplicatePayPal = await _context.PaymentMethods
-                    .Where(pm => pm.PayPalEmail == paymentRequest.PayPalEmail &&
-                           pm.PassengerId == paymentRequest.PassengerId)
-                    .FirstOrDefaultAsync();
-
-                if (duplicatePayPal != null)
-                {
-                    return BadRequest("This PayPal account is already registered for this passenger.");
                 }
             }
 

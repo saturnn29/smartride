@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SmartRide.Data;
 using SmartRide.Services;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("smartride")));
+// Add this in the Startup.cs or Program.cs
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
 
 builder.Services.AddScoped<PaymentService>();
 // Register Email and Notification services

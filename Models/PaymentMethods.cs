@@ -1,14 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace SmartRide.Models
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum PaymentType
     {
-        CREDIT_CARD = 1,
-        DEBIT_CARD = 2,
-        PAYPAL = 3,
-        CASH = 4
+        CREDIT_CARD,
+        DEBIT_CARD,
+        CASH
     }
 
     public class PaymentMethods
@@ -18,8 +19,9 @@ namespace SmartRide.Models
         public int PaymentMethodId { get; set; }
 
         [Required]
-        [Column("payment_type_id")]
-        public PaymentType PaymentType { get; set; } 
+        [Column("payment_type")]
+        [EnumDataType(typeof(PaymentType))]
+        public PaymentType PaymentType { get; set; }
 
         [Column("passenger_id")]
         public int PassengerId { get; set; }
@@ -32,8 +34,5 @@ namespace SmartRide.Models
 
         [Column("card_holder_name")]
         public string? CardHolderName { get; set; }
-
-        [Column("paypal_email")]
-        public string? PayPalEmail { get; set; }
     }
 }

@@ -24,7 +24,7 @@ namespace SmartRide.Controllers
         public async Task<IActionResult> ProcessPayment([FromBody] ProcessPayment request)
         {
             // Use a temporary or mock ride ID for testing purposes
-            int rideId = 2; // or generate a mock ride ID dynamically if needed
+            int rideId = 4; // or generate a mock ride ID dynamically if needed
 
             if (request == null || request.Amount <= 0)
             {
@@ -70,11 +70,6 @@ namespace SmartRide.Controllers
                             cardRequest.CardHolderName,
                             cardRequest.Amount
                         );
-                        success = true;
-                    }
-                    else if (savedMethod.PaymentType == PaymentType.PAYPAL)
-                    {
-                        message = $"PayPal payment processed for {savedMethod.PayPalEmail}";
                         success = true;
                     }
                     else
