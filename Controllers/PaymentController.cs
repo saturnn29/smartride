@@ -29,59 +29,59 @@ namespace SmartRide.Controllers
         }
 
         // ✅ Process Payment Using a Saved Payment Method
-        [HttpPost("ProcessPayment")]
-        public async Task<IActionResult> ProcessPayment([FromBody] ProcessPayment request)
-        {
-            if (request == null || request.Amount <= 0)
-            {
-                return BadRequest(new { success = false, message = "Invalid request" });
-            }
+    //    [HttpPost("ProcessPayment")]
+    //    public async Task<IActionResult> ProcessPayment([FromBody] ProcessPayment request)
+    //    {
+    //        if (request == null || request.Amount <= 0)
+    //        {
+    //            return BadRequest(new { success = false, message = "Invalid request" });
+    //        }
 
-            // Retrieve saved payment method if PaymentMethodId is provided
-            if (request.PaymentMethodId.HasValue)
-            {
-                var savedMethod = await _paymentService.GetPaymentMethodById(request.PassengerId, request.PaymentMethodId.Value);
-                if (savedMethod == null)
-                {
-                    return BadRequest(new { success = false, message = "Saved payment method not found." });
-                }
+    //        // Retrieve saved payment method if PaymentMethodId is provided
+    //        if (request.PaymentMethodId.HasValue)
+    //        {
+    //            var savedMethod = await _paymentService.GetPaymentMethodById(request.PassengerId, request.PaymentMethodId.Value);
+    //            if (savedMethod == null)
+    //            {
+    //                return BadRequest(new { success = false, message = "Saved payment method not found." });
+    //            }
 
-                request.PaymentType = savedMethod.PaymentType; // Use saved method's type
+    //            request.PaymentType = savedMethod.PaymentType; // Use saved method's type
 
-                if (savedMethod.PaymentType == "CREDIT_CARD" || savedMethod.PaymentType == "DEBIT_CARD")
-                {
-                    var cardRequest = new CardPaymentRequest
-                    {
-                        Amount = request.Amount,
-                        PassengerId = request.PassengerId,
-                        PaymentMethodId = request.PaymentMethodId,
-                        PaymentType = savedMethod.PaymentType,
-                        CardNumber = savedMethod.CardNumber,
-                        ExpiryDate = savedMethod.ExpiryDate,
-                        CardHolderName = savedMethod.CardHolderName
-                    };
+    //            if (savedMethod.PaymentType == "CREDIT_CARD" || savedMethod.PaymentType == "DEBIT_CARD")
+    //            {
+    //                var cardRequest = new CardPaymentRequest
+    //                {
+    //                    Amount = request.Amount,
+    //                    PassengerId = request.PassengerId,
+    //                    PaymentMethodId = request.PaymentMethodId,
+    //                    PaymentType = savedMethod.PaymentType,
+    //                    CardNumber = savedMethod.CardNumber,
+    //                    ExpiryDate = savedMethod.ExpiryDate,
+    //                    CardHolderName = savedMethod.CardHolderName
+    //                };
 
-                    string result = await _paymentService.ProcessCardPayment(
-                        cardRequest.CardNumber,
-                        cardRequest.ExpiryDate,
-                        cardRequest.CardHolderName,
-                        cardRequest.Amount
-                    );
-                    return Ok(new { success = true, message = result });
-                }
-                else if (savedMethod.PaymentType == "PAYPAL")
-                {
-                    return Ok(new { success = true, message = $"PayPal payment processed for {savedMethod.PayPalEmail}" });
-                }
-                else if (savedMethod.PaymentType == "CASH")
-                {
-                    return Ok(new { success = true, message = "Cash payment pending. Collect payment on delivery." });
-                }
+    //                string result = await _paymentService.ProcessCardPayment(
+    //                    cardRequest.CardNumber,
+    //                    cardRequest.ExpiryDate,
+    //                    cardRequest.CardHolderName,
+    //                    cardRequest.Amount
+    //                );
+    //                return Ok(new { success = true, message = result });
+    //            }
+    //            else if (savedMethod.PaymentType == "PAYPAL")
+    //            {
+    //                return Ok(new { success = true, message = $"PayPal payment processed for {savedMethod.PayPalEmail}" });
+    //            }
+    //            else if (savedMethod.PaymentType == "CASH")
+    //            {
+    //                return Ok(new { success = true, message = "Cash payment pending. Collect payment on delivery." });
+    //            }
 
-                return BadRequest(new { success = false, message = "Unsupported saved payment type" });
-            }
+    //            return BadRequest(new { success = false, message = "Unsupported saved payment type" });
+    //        }
 
-            return BadRequest(new { success = false, message = "Payment method ID is required" });
-        }
+    //        return BadRequest(new { success = false, message = "Payment method ID is required" });
+    //    }
     }
 }

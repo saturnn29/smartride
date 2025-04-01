@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace SmartRide.Controllers
 {
-    [Route("api/payment-methods")]
+    [Route("api/adding-payment-methods")]
     [ApiController]
     public class PaymentMethodsController : ControllerBase
     {
@@ -25,14 +25,14 @@ namespace SmartRide.Controllers
                 return BadRequest("Invalid request data.");
             }
 
-            var validPaymentTypes = new[] { "CREDIT_CARD", "DEBIT_CARD", "PAYPAL", "CASH" };
+            var validPaymentTypes = Enum.GetValues(typeof(PaymentType)).Cast<PaymentType>();
             if (!validPaymentTypes.Contains(paymentRequest.PaymentType))
             {
                 return BadRequest("Invalid payment type.");
             }
 
             // Validate required fields based on payment type
-            if ((paymentRequest.PaymentType == "CREDIT_CARD" || paymentRequest.PaymentType == "DEBIT_CARD") &&
+            if ((paymentRequest.PaymentType == PaymentType.CREDIT_CARD || paymentRequest.PaymentType == PaymentType.DEBIT_CARD) &&
                 (string.IsNullOrEmpty(paymentRequest.CardNumber) ||
                  string.IsNullOrEmpty(paymentRequest.ExpiryDate) ||
                  string.IsNullOrEmpty(paymentRequest.CardHolderName)))
@@ -40,9 +40,24 @@ namespace SmartRide.Controllers
                 return BadRequest("Card details are required for credit/debit card payments.");
             }
 
-            if (paymentRequest.PaymentType == "PAYPAL" && string.IsNullOrEmpty(paymentRequest.PayPalEmail))
+            if (paymentRequest.PaymentType == PaymentType.PAYPAL && string.IsNullOrEmpty(paymentRequest.PayPalEmail))
             {
                 return BadRequest("PayPal email is required for PayPal payments.");
+            }
+
+            // For non-PayPal payments, ensure PayPal email is null
+            if (paymentRequest.PaymentType != PaymentType.PAYPAL)
+            {
+                paymentRequest.PayPalEmail = null;
+            }
+
+            // For non-card payments, ensure card details are null
+            if (paymentRequest.PaymentType != PaymentType.CREDIT_CARD &&
+                paymentRequest.PaymentType != PaymentType.DEBIT_CARD)
+            {
+                paymentRequest.CardNumber = null;
+                paymentRequest.ExpiryDate = null;
+                paymentRequest.CardHolderName = null;
             }
 
             _context.PaymentMethods.Add(paymentRequest);
