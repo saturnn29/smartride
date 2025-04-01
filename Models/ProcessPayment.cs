@@ -9,7 +9,7 @@
         public string PaymentType { get; set; } // ('CREDIT_CARD', 'DEBIT_CARD', 'PAYPAL', 'CASH')
     }
 
-    // ✅ Card Payment Request (When adding a new credit/debit card)
+    // Card Payment Request (When adding a new credit/debit card)
     public class CardPaymentRequest : ProcessPayment
     {
         public string CardNumber { get; set; }

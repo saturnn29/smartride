@@ -15,7 +15,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("smartride")));
 
 builder.Services.AddScoped<PaymentService>();
-
+// Register Email and Notification services
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<PaymentService>();
 
 builder.Services.AddCors(options =>
 {

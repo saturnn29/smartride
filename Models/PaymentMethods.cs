@@ -19,7 +19,7 @@ namespace SmartRide.Models
 
         [Required]
         [Column("payment_type_id")]
-        public PaymentType PaymentType { get; set; }  // Changed to enum
+        public PaymentType PaymentType { get; set; } 
 
         [Column("passenger_id")]
         public int PassengerId { get; set; }
