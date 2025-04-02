@@ -22,23 +22,37 @@ namespace SmartRide.Controllers
         {
             using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("smartride")))
             {
-                string query = "INSERT INTO Users (username, password, email, created_at) VALUES (@username, @password, @email, @created_at)";
+                con.Open();
 
-                using (SqlCommand cmd = new SqlCommand(query, con))
+                // Insert user into Users table
+                string userQuery = "INSERT INTO Users (username, password, email, created_at) OUTPUT INSERTED.user_id VALUES (@username, @password, @email, @created_at)";
+                int userId;
+
+                using (SqlCommand userCmd = new SqlCommand(userQuery, con))
                 {
-                    cmd.Parameters.AddWithValue("@username", registration.username);
-                    cmd.Parameters.AddWithValue("@password", registration.password); 
-                    cmd.Parameters.AddWithValue("@email", registration.email);
-                    cmd.Parameters.AddWithValue("@created_at", DateTime.UtcNow); 
+                    userCmd.Parameters.AddWithValue("@username", registration.username);
+                    userCmd.Parameters.AddWithValue("@password", registration.password);
+                    userCmd.Parameters.AddWithValue("@email", registration.email);
+                    userCmd.Parameters.AddWithValue("@created_at", DateTime.UtcNow);
 
-                    con.Open();
-                    int rowsAffected = cmd.ExecuteNonQuery();
-
-                    if (rowsAffected > 0)
-                        return Ok("User registered successfully");
-                    else
+                    object result = userCmd.ExecuteScalar();
+                    if (result == null)
+                    {
                         return BadRequest("Failed to register user");
+                    }
+                    userId = (int)result;
                 }
+
+                // Insert into Passengers table
+                string passengerQuery = "INSERT INTO Passengers (passenger_id) VALUES (@passenger_id)";
+                using (SqlCommand passengerCmd = new SqlCommand(passengerQuery, con))
+                {
+                    passengerCmd.Parameters.AddWithValue("@passenger_id", userId);
+                    int rowsAffected = passengerCmd.ExecuteNonQuery();
+                    if (rowsAffected > 0)
+                        return Ok("User registered successfully as a passenger");
+                }
+                return BadRequest("Failed to register passenger");
             }
         }
 

@@ -23,11 +23,11 @@ namespace SmartRide.Controllers
         {
             using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("smartride")))
             {
-                string query = "SELECT * FROM Users WHERE username = @username AND password = @password";
+                string query = "SELECT * FROM Users WHERE email = @email AND password = @password";
 
                 using (SqlCommand cmd = new SqlCommand(query, con))
                 {
-                    cmd.Parameters.AddWithValue("@username", loginRequest.username);
+                    cmd.Parameters.AddWithValue("@email", loginRequest.email);
                     cmd.Parameters.AddWithValue("@password", loginRequest.password); 
 
                     con.Open();
@@ -55,11 +55,11 @@ namespace SmartRide.Controllers
                 con.Open();
 
                 // Check if username and password are correct in Users table
-                string userQuery = "SELECT user_id, password FROM Users WHERE username = @username";
+                string userQuery = "SELECT user_id, password FROM Users WHERE email = @email";
 
                 using (SqlCommand userCmd = new SqlCommand(userQuery, con))
                 {
-                    userCmd.Parameters.AddWithValue("@username", loginRequest.username);
+                    userCmd.Parameters.AddWithValue("@email", loginRequest.email);
                     using (SqlDataReader reader = userCmd.ExecuteReader())
                     {
                         if (!reader.Read())
@@ -78,11 +78,10 @@ namespace SmartRide.Controllers
                         reader.Close();
 
                         // Check if user is a registered driver with the provided license number
-                        string driverQuery = "SELECT COUNT(*) FROM Drivers WHERE driver_id = @user_id AND license_number = @license_number";
+                        string driverQuery = "SELECT COUNT(*) FROM Drivers WHERE driver_id = @user_id";
                         using (SqlCommand driverCmd = new SqlCommand(driverQuery, con))
                         {
                             driverCmd.Parameters.AddWithValue("@user_id", userId);
-                            driverCmd.Parameters.AddWithValue("@license_number", loginRequest.license_number);
                             int driverExists = (int)driverCmd.ExecuteScalar();
 
                             if (driverExists == 0)
