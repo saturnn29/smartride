@@ -12,6 +12,8 @@ namespace SmartRide.Data
         public DbSet<Invoices> Invoices { get; set; }
         public DbSet<User> Users { get; set; }
 
+        public DbSet<RideRequest> RideRequests { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
