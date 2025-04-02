@@ -11,7 +11,6 @@ public class RideRequestHub : Hub
     public override async Task OnConnectedAsync()
     {
         await base.OnConnectedAsync();
-        Console.WriteLine($"Driver connected with Connection ID: {Context.ConnectionId}");
     }
 
     public async Task RequestRide(int passengerId, double pickupLat, double pickupLong, double dropoffLat, double dropoffLong, float fareAmount)

@@ -9,7 +9,7 @@ public class RideRequest
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column("request_id")]
-    public int RequestId { get; set; }
+    public int RequestId { get; set;}
 
     [Column("passenger_id")]
     public int PassengerId { get; set; }

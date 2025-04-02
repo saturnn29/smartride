@@ -8,7 +8,7 @@
     <script>
         // Establish connection to SignalR Hub
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("https://localhost:7122/Hubs/RideRequestHub") // Update this with your SignalR hub URL
+            .withUrl("/Hubs/RideRequestHub") // Update this with your SignalR hub URL
             .build();
 
         connection.start()
