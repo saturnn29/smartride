@@ -14,8 +14,8 @@ public class RideRequest
     [Column("passenger_id")]
     public int PassengerId { get; set; }
 
-    //[Column("driver_id")]
-    //public int? DriverId { get; set; }
+    [Column("driver_id")]
+    public int? DriverId { get; set; }
 
     [Column("pickup_location_lat")]
     public double PickupLat { get; set; }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using SmartRide.Models;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 public class RideRequestHub : Hub
 {
@@ -42,13 +43,12 @@ public class RideRequestHub : Hub
         Console.WriteLine($"New ride request sent to all connected drivers: {rideRequest.RequestId}");
     }
 
-
     public async Task AcceptRide(int driverId, int requestId)
     {
         if (ActiveRequests.TryGetValue(requestId, out var rideRequest) && rideRequest.Status == "PENDING")
         {
             rideRequest.Status = "ACCEPTED";
-            //rideRequest.DriverId = driverId;
+            rideRequest.DriverId = driverId;
             DriverAssignments[Context.ConnectionId] = requestId;
 
             // Notify driver
