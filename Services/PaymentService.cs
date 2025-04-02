@@ -44,7 +44,7 @@ namespace SmartRide.Services
         public async Task<Passengers> GetPassengerById(int passengerId)
         {
             return await _dbContext.Set<Passengers>()
-                .FirstOrDefaultAsync(p => p.Id == passengerId);
+                .FirstOrDefaultAsync(p => p.PassengerId == passengerId);
         }
 
         // Save successful payment to Invoices table

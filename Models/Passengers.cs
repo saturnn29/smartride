@@ -1,19 +1,23 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using SmartRide.Models;
 
 namespace SmartRide.Models
 {
-    [Table("Users")] // Ensure the table name matches
     public class Passengers
     {
         [Key]
-        [Column("user_id")] // Update to match the actual column name
-        public int Id { get; set; }
+        [Column("passenger_id")]
+        public int PassengerId { get; set; }  // This is both the PK and FK to Users table
 
-        [Column("email")] // Update to match the actual column name
-        public string Email { get; set; }
+        // Navigation property to User
+        [ForeignKey("PassengerId")]  // This specifies that PassengerId is the FK to User
+        public User User { get; set; }
 
-        [Column("username")] // Update to match the actual column name
-        public string Name{ get; set; }
+        [ForeignKey("PaymentMethod")]
+        [Column("default_method_id")]
+        public int? DefaultMethodId { get; set; }
+
+        public PaymentMethods PaymentMethod { get; set; }
     }
 }

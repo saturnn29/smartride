@@ -10,6 +10,7 @@ namespace SmartRide.Data
         public DbSet<PaymentMethods> PaymentMethods { get; set; }
         public DbSet<Passengers> Passengers { get; set; }
         public DbSet<Invoices> Invoices { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

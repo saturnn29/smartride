@@ -40,7 +40,7 @@ namespace SmartRide.Controllers
                 }
 
                 var passenger = await _paymentService.GetPassengerById(request.PassengerId);
-                if (passenger == null || string.IsNullOrEmpty(passenger.Email))
+                if (passenger == null || string.IsNullOrEmpty(passenger.User.Email))
                 {
                     return BadRequest(new { success = false, message = "Passenger information not found or email missing." });
                 }
@@ -95,14 +95,14 @@ namespace SmartRide.Controllers
                     success = false;
                 }
 
-                _ = _notificationService.SendPaymentEmailNotificationAsync(
-                    request.PassengerId,
-                    passenger.Email,
-                    request.Amount,
-                    request.PaymentType,
-                    success,
-                    message
-                );
+                //_ = _notificationService.SendPaymentEmailNotificationAsync(
+                //    request.PassengerId,
+                //    passenger.Email,
+                //    request.Amount,
+                //    request.PaymentType,
+                //    success,
+                //    message
+                //);
 
                 return success ? Ok(new { success = true, message }) : BadRequest(new { success = false, message });
             }

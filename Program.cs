@@ -19,12 +19,11 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-
 builder.Services.AddScoped<PaymentService>();
-// Register Email and Notification services
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<PaymentService>();
+builder.Services.AddScoped<PassengerService>();
 
 builder.Services.AddCors(options =>
 {

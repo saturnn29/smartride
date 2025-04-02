@@ -67,18 +67,22 @@ namespace SmartRide.Controllers
             _context.PaymentMethods.Add(paymentRequest);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetPaymentMethod), new { id = paymentRequest.PaymentMethodId }, paymentRequest);
+            return CreatedAtAction(nameof(GetPaymentMethodsByPassenger), new { id = paymentRequest.PaymentMethodId }, paymentRequest);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetPaymentMethod(int id)
+        [HttpGet("passenger/{passengerId}")]
+        public async Task<IActionResult> GetPaymentMethodsByPassenger(int passengerId)
         {
-            var paymentMethod = await _context.PaymentMethods.FindAsync(id);
-            if (paymentMethod == null)
+            var paymentMethods = await _context.PaymentMethods
+                .Where(pm => pm.PassengerId == passengerId)
+                .ToListAsync();
+
+            if (paymentMethods == null || !paymentMethods.Any())
             {
-                return NotFound();
+                return NotFound("No payment methods found for the given passenger.");
             }
-            return Ok(paymentMethod);
+
+            return Ok(paymentMethods);
         }
     }
 }
