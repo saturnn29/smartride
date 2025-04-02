@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+    <script>
+        // Set the driverId dynamically (replace with real driver ID in production)
+        const driverId = 1; // For testing purposes, set to actual driver ID
+
+        // Initialize the SignalR connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("https://localhost:7122/Hubs/RideRequestHub") // URL to your SignalR hub
+            .build();
+
+        // Handle incoming ride requests from SignalR
+        connection.on("ReceiveRideRequest", function (rideRequest) {
+            console.log("Received ride request:", rideRequest);
+
+            // Display ride request details in the UI
+            const rideDetails = `
+                        <strong>Ride Request Details:</strong><br>
+                        Passenger ID: ${rideRequest.passengerId}<br>
+                        Pickup Location: ${rideRequest.pickupLocation}<br>
+                        Dropoff Location: ${rideRequest.dropoffLocation}<br>
+                        Status: ${rideRequest.status}<br>
+                        <button onclick="acceptRideRequest(${rideRequest.requestId})">Accept Ride</button>
+                    `;
+            document.getElementById("rideRequestDetails").innerHTML = rideDetails;
+        });
+
+        // Start the SignalR connection
+        connection.start().catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        // Accept a ride request
+        function acceptRideRequest(requestId) {
+            const driverId = 3; // Dynamic in production
+
+            fetch(`https://localhost:7122/api/RideRequest/AcceptRideRequest/${driverId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestId) // Send raw integer, not an object
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    alert("Response: " + data);
+                    document.getElementById("rideRequestDetails").innerHTML = "<strong>Ride Accepted!</strong>";
+                })
+                .catch(error => {
+                    console.error('Error accepting ride:', error);
+                });
+        }
+
+    </script>
+</head>
+<body>
+    <h1>Driver Dashboard</h1>
+
+    <!-- This section will display incoming ride requests -->
+    <div id="rideRequestDetails">
+        <!-- Ride request details will be populated here when a ride is received -->
+    </div>
+
+</body>
+</html>

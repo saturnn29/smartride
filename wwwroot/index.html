@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartRide - Test Create Ride Request</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
+    <script>
+        // Establish connection to SignalR Hub
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/Hubs/RideRequestHub") // Update this with your SignalR hub URL
+            .build();
+
+        connection.start()
+            .then(() => console.log("Connected to SignalR Hub"))
+            .catch(err => console.error("Error while connecting to SignalR Hub:", err));
+
+        // Listen for messages from SignalR
+        connection.on("ReceiveRideRequest", function (request) {
+            console.log("New ride request received:", request);
+            alert("New ride request created: " + JSON.stringify(request));
+        });
+
+        connection.on("RideRequestCreated", function (request) {
+            console.log("Ride request successfully created:", request);
+            alert("Ride request successfully created for passenger: " + request.passengerId);
+        });
+
+        // Function to create a new ride request
+        async function createRideRequest() {
+            const rideRequest = {
+                passengerId: 1, // Example passenger ID
+                pickupLat: 40.7128, // Example pickup latitude (New York City)
+                pickupLong: -74.0060, // Example pickup longitude
+                dropoffLat: 40.730610, // Example dropoff latitude
+                dropoffLong: -73.935242, // Example dropoff longitude
+                fareAmount: 20.0 // Example fare amount
+            };
+
+            try {
+                const response = await fetch("https://localhost:7122/api/RideRequest/CreateRideRequest", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(rideRequest)
+                });
+
+                if (response.ok) {
+                    console.log("Ride request sent successfully");
+                    alert("Ride request sent successfully.");
+                } else {
+                    console.error("Failed to create ride request:", response.statusText);
+                    alert("Failed to create ride request.");
+                }
+            } catch (error) {
+                console.error("Error creating ride request:", error);
+                alert("Error creating ride request.");
+            }
+        }
+
+        // Call createRideRequest() to test the feature
+        window.onload = () => {
+            document.getElementById("createButton").onclick = createRideRequest;
+        };
+    </script>
+</head>
+<body>
+    <h1>SmartRide - Test Create Ride Request</h1>
+    <button id="createButton">Create Ride Request</button>
+</body>
+</html>

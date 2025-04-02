@@ -12,6 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSignalR();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("smartride")));
 // Add this in the Startup.cs or Program.cs
@@ -49,6 +50,7 @@ app.UseStaticFiles();
 
 app.UseCors("AllowAll");
 
+app.MapHub<RideRequestHub>("/Hubs/RideRequestHub");
 
 app.UseHttpsRedirection();
 

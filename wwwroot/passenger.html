@@ -1,0 +1,61 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passenger - SmartRide</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+</head>
+<body>
+    <h1>Passenger - Request a Ride</h1>
+    <button onclick="createRideRequest()">Request Ride</button>
+    <p id="status"></p>
+
+    <script>
+        const passengerId = 2; // Simulated Passenger ID
+        sessionStorage.setItem("userRole", "passenger");
+
+        // Connect to SignalR Hub
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/Hubs/RideRequestHub")
+            .build();
+
+        connection.start().then(() => {
+            console.log("Passenger connected to SignalR.");
+        }).catch(err => console.error(err));
+
+        async function createRideRequest() {
+            const requestData = {
+                PassengerId: passengerId,
+                PickupLat: 21.0285,
+                PickupLong: 105.8542,
+                DropoffLat: 21.0300,
+                DropoffLong: 105.8600,
+                FareAmount: 150000,
+                Status: "PENDING",
+                RequestedAt: new Date().toISOString()
+            };
+
+            const response = await fetch("/api/RideRequest/CreateRideRequest", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestData)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById("status").innerText = `Ride request created! ID: ${data.requestId}`;
+                console.log("Ride request created:", data);
+            } else {
+                document.getElementById("status").innerText = "Failed to create ride request.";
+                console.error("Error:", await response.text());
+            }
+        }
+
+        // Listen for ride request updates
+        connection.on("RideRequestCreated", (request) => {
+            console.log("Ride request confirmed:", request);
+        });
+    </script>
+</body>
+</html>
