@@ -53,6 +53,7 @@ app.UseCors("AllowAll");
 app.UseRouting();
 
 app.MapHub<RideRequestHub>("/Hubs/RideRequestHub");
+app.MapHub<RideRequestHub>("/Hubs/RidesHub");
 
 app.UseHttpsRedirection();
 

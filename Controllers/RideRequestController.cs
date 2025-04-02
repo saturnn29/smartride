@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using SmartRide.Data;
 using SmartRide.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace SmartRide.Controllers
@@ -27,24 +27,14 @@ namespace SmartRide.Controllers
         {
             if (request == null)
             {
-                return BadRequest("Invalid request data.");
+                return BadRequest("Invalid ride request data.");
             }
 
-            // Set initial status and nullify DriverId
-            request.Status = "PENDING";
-            request.DriverId = null;
-
-            // Save the ride request in the database
             _context.RideRequests.Add(request);
             await _context.SaveChangesAsync();
 
-            Console.WriteLine($"Received ride request: {JsonConvert.SerializeObject(request)}");
-
-            // Notify all connected drivers about the new ride request
-            await _hubContext.Clients.All.SendAsync("ReceiveRideRequest", request);
-
-            // Optionally notify the passenger that the request was created
-            await _hubContext.Clients.Client(request.PassengerId.ToString()).SendAsync("RideRequestCreated", request);
+            // Notify all connected clients about the new ride request
+            await _hubContext.Clients.All.SendAsync("NewRideRequest", request);
 
             return CreatedAtAction(nameof(GetRideRequest), new { id = request.RequestId }, request);
         }
@@ -61,65 +51,29 @@ namespace SmartRide.Controllers
             return Ok(rideRequest);
         }
 
-        // Driver accepts a ride request
-        [HttpPut("AcceptRideRequest/{driverId}")]
-        public async Task<IActionResult> AcceptRideRequest(int driverId, [FromBody] int requestId)
+        // Update ride request status
+        [HttpPatch("UpdateRideRequest/{id}")]
+        public async Task<IActionResult> UpdateRideRequest(int id, [FromBody] RideUpdateRequest updateRequest)
         {
-            var rideRequest = await _context.RideRequests.FindAsync(requestId);
+            var rideRequest = await _context.RideRequests.FindAsync(id);
             if (rideRequest == null)
             {
                 return NotFound("Ride request not found.");
             }
 
-            if (rideRequest.Status != "PENDING")
-            {
-                return BadRequest("Ride request is not available.");
-            }
-
-            // Log for debugging
-            Console.WriteLine($"Accepting ride request: {requestId} by driver: {driverId}");
-
-            // Update the status and assign the driver
-            rideRequest.DriverId = driverId;
-            rideRequest.Status = "ACCEPTED";
+            // Update status of the ride request
+            rideRequest.Status = updateRequest.Status;
 
             _context.RideRequests.Update(rideRequest);
             await _context.SaveChangesAsync();
 
-            // Notify the passenger that a driver has accepted the ride
-            await _hubContext.Clients.Client(rideRequest.PassengerId.ToString()).SendAsync("RideRequestAccepted", rideRequest);
+            // Notify the passenger about the update
+            await _hubContext.Clients.Client(rideRequest.PassengerId.ToString()).SendAsync("RideRequestUpdated", rideRequest);
 
-            return Ok("Ride request accepted.");
+            return Ok(rideRequest);
         }
 
-
-        // Cancel a ride request
-        [HttpPut("CancelRide/{requestId}")]
-        public async Task<IActionResult> CancelRide(int requestId)
-        {
-            var rideRequest = await _context.RideRequests.FindAsync(requestId);
-            if (rideRequest == null)
-            {
-                return NotFound("Ride request not found.");
-            }
-
-            if (rideRequest.Status == "COMPLETED")
-            {
-                return BadRequest("Cannot cancel a completed ride.");
-            }
-
-            // Update status to CANCELLED
-            rideRequest.Status = "CANCELLED";
-            _context.RideRequests.Update(rideRequest);
-            await _context.SaveChangesAsync();
-
-            // Notify all connected clients that the ride was canceled
-            await _hubContext.Clients.All.SendAsync("RideRequestCancelled", rideRequest);
-
-            return Ok("Ride canceled successfully.");
-        }
-
-        // Get all ride requests (optional, for monitoring or admin purposes)
+        // Get all ride requests (optional for monitoring or admin purposes)
         [HttpGet("GetAllRideRequests")]
         public async Task<IActionResult> GetAllRideRequests()
         {

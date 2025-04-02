@@ -3,70 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartRide - Test Create Ride Request</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
-    <script>
-        // Establish connection to SignalR Hub
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/Hubs/RideRequestHub") // Update this with your SignalR hub URL
-            .build();
-
-        connection.start()
-            .then(() => console.log("Connected to SignalR Hub"))
-            .catch(err => console.error("Error while connecting to SignalR Hub:", err));
-
-        // Listen for messages from SignalR
-        connection.on("ReceiveRideRequest", function (request) {
-            console.log("New ride request received:", request);
-            alert("New ride request created: " + JSON.stringify(request));
-        });
-
-        connection.on("RideRequestCreated", function (request) {
-            console.log("Ride request successfully created:", request);
-            alert("Ride request successfully created for passenger: " + request.passengerId);
-        });
-
-        // Function to create a new ride request
-        async function createRideRequest() {
-            const rideRequest = {
-                passengerId: 1, // Example passenger ID
-                pickupLat: 40.7128, // Example pickup latitude (New York City)
-                pickupLong: -74.0060, // Example pickup longitude
-                dropoffLat: 40.730610, // Example dropoff latitude
-                dropoffLong: -73.935242, // Example dropoff longitude
-                fareAmount: 20.0 // Example fare amount
-            };
-
-            try {
-                const response = await fetch("https://localhost:7122/api/RideRequest/CreateRideRequest", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(rideRequest)
-                });
-
-                if (response.ok) {
-                    console.log("Ride request sent successfully");
-                    alert("Ride request sent successfully.");
-                } else {
-                    console.error("Failed to create ride request:", response.statusText);
-                    alert("Failed to create ride request.");
-                }
-            } catch (error) {
-                console.error("Error creating ride request:", error);
-                alert("Error creating ride request.");
-            }
+    <title>SmartRide Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@5.0.0/dist/browser/signalr.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
         }
 
-        // Call createRideRequest() to test the feature
-        window.onload = () => {
-            document.getElementById("createButton").onclick = createRideRequest;
-        };
-    </script>
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+            button:hover {
+                background-color: #45a049;
+            }
+    </style>
 </head>
 <body>
-    <h1>SmartRide - Test Create Ride Request</h1>
-    <button id="createButton">Create Ride Request</button>
+
+    <div class="container">
+        <h2>SmartRide Test Interface</h2>
+
+        <!-- Request Ride Form -->
+        <div class="form-group">
+            <label for="passengerId">Passenger ID</label>
+            <input type="number" id="passengerId" placeholder="Enter Passenger ID">
+        </div>
+        <div class="form-group">
+            <label for="pickupLat">Pickup Latitude</label>
+            <input type="number" id="pickupLat" placeholder="Enter Pickup Latitude">
+        </div>
+        <div class="form-group">
+            <label for="pickupLong">Pickup Longitude</label>
+            <input type="number" id="pickupLong" placeholder="Enter Pickup Longitude">
+        </div>
+        <div class="form-group">
+            <label for="dropoffLat">Dropoff Latitude</label>
+            <input type="number" id="dropoffLat" placeholder="Enter Dropoff Latitude">
+        </div>
+        <div class="form-group">
+            <label for="dropoffLong">Dropoff Longitude</label>
+            <input type="number" id="dropoffLong" placeholder="Enter Dropoff Longitude">
+        </div>
+        <div class="form-group">
+            <label for="fareAmount">Fare Amount</label>
+            <input type="number" id="fareAmount" placeholder="Enter Fare Amount">
+        </div>
+        <button id="requestRideButton">Request Ride</button>
+
+        <h3>Driver Actions</h3>
+        <div class="form-group">
+            <label for="driverId">Driver ID</label>
+            <input type="number" id="driverId" placeholder="Enter Driver ID">
+        </div>
+        <div class="form-group">
+            <label for="rideRequestId">Ride Request ID</label>
+            <input type="number" id="rideRequestId" placeholder="Enter Ride Request ID to Accept">
+        </div>
+        <button id="acceptRideButton">Accept Ride</button>
+
+        <h3>Status Updates</h3>
+        <div class="form-group">
+            <label for="rideId">Ride ID</label>
+            <input type="number" id="rideId" placeholder="Enter Ride ID">
+        </div>
+        <div class="form-group">
+            <label for="status">New Status</label>
+            <input type="text" id="status" placeholder="Enter Ride Status (e.g. 'IN_PROGRESS')">
+        </div>
+        <button id="updateStatusButton">Update Status</button>
+
+        <h3>Messages</h3>
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        // Set up the SignalR connection to the RideRequestHub
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/rideRequestHub")
+            .build();
+
+        connection.on("NewRideRequest", function (rideRequest) {
+            displayMessage(`New ride request received: ${JSON.stringify(rideRequest)}`);
+        });
+
+        connection.on("NewRideRequestForOthers", function (rideRequest) {
+            displayMessage(`New ride request sent to drivers: ${JSON.stringify(rideRequest)}`);
+        });
+
+        connection.on("RideRequestAccepted", function (rideRequest) {
+            displayMessage(`Ride request accepted: ${JSON.stringify(rideRequest)}`);
+        });
+
+        connection.on("RideRequestAcceptedByDriver", function (rideRequest) {
+            displayMessage(`Ride request accepted by driver: ${JSON.stringify(rideRequest)}`);
+        });
+
+        connection.on("Error", function (message) {
+            displayMessage(`Error: ${message}`);
+        });
+
+        connection.start().catch(err => console.error(err));
+
+        // Event listeners for buttons
+        document.getElementById("requestRideButton").addEventListener("click", function () {
+            const passengerId = document.getElementById("passengerId").value;
+            const pickupLat = document.getElementById("pickupLat").value;
+            const pickupLong = document.getElementById("pickupLong").value;
+            const dropoffLat = document.getElementById("dropoffLat").value;
+            const dropoffLong = document.getElementById("dropoffLong").value;
+            const fareAmount = document.getElementById("fareAmount").value;
+
+            if (!passengerId || !pickupLat || !pickupLong || !dropoffLat || !dropoffLong || !fareAmount) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            connection.invoke("RequestRide", parseInt(passengerId), parseFloat(pickupLat), parseFloat(pickupLong), parseFloat(dropoffLat), parseFloat(dropoffLong), parseFloat(fareAmount))
+                .catch(err => console.error(err));
+        });
+
+        document.getElementById("acceptRideButton").addEventListener("click", function () {
+            const driverId = document.getElementById("driverId").value;
+            const rideRequestId = document.getElementById("rideRequestId").value;
+
+            if (!driverId || !rideRequestId) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            connection.invoke("AcceptRide", parseInt(driverId), parseInt(rideRequestId))
+                .catch(err => console.error(err));
+        });
+
+        document.getElementById("updateStatusButton").addEventListener("click", function () {
+            const rideId = document.getElementById("rideId").value;
+            const status = document.getElementById("status").value;
+
+            if (!rideId || !status) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            const updateRequest = {
+                Status: status
+            };
+
+            fetch(`/api/ride/UpdateRide/${rideId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(updateRequest),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    displayMessage(`Ride updated: ${JSON.stringify(data)}`);
+                })
+                .catch(error => console.error(error));
+        });
+
+        // Display messages
+        function displayMessage(message) {
+            const messagesDiv = document.getElementById("messages");
+            const messageElement = document.createElement("div");
+            messageElement.textContent = message;
+            messagesDiv.appendChild(messageElement);
+        }
+    </script>
+
 </body>
 </html>

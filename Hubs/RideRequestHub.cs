@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using SmartRide.Models;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 public class RideRequestHub : Hub
 {
@@ -41,7 +42,6 @@ public class RideRequestHub : Hub
         // Log to track if it's being sent to the drivers
         Console.WriteLine($"New ride request sent to all connected drivers: {rideRequest.RequestId}");
     }
-
 
     public async Task AcceptRide(int driverId, int requestId)
     {
