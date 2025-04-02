@@ -76,6 +76,9 @@ namespace SmartRide.Controllers
                 return BadRequest("Ride request is not available.");
             }
 
+            // Log for debugging
+            Console.WriteLine($"Accepting ride request: {requestId} by driver: {driverId}");
+
             // Update the status and assign the driver
             rideRequest.DriverId = driverId;
             rideRequest.Status = "ACCEPTED";
@@ -88,6 +91,7 @@ namespace SmartRide.Controllers
 
             return Ok("Ride request accepted.");
         }
+
 
         // Cancel a ride request
         [HttpPut("CancelRide/{requestId}")]
